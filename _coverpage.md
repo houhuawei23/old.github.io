@@ -1,11 +1,10 @@
 <!--[logo](_media/touxiang.jpg)-->
 # 华仔的文档网站
 ## 个人文档网站
-> 一个神奇的文档网站生成巩固
+> Our Stories Begins
 
-* Simple and lightweight (~12kb gzipped)
-* Multiple themes
-* Not build static html files
+* Email: 2589622350@qq.com
+* NUDT
 
 [GitHub](https://github.com/houhuawei23)
 [Get Started](#quick-start)
