@@ -10,6 +10,13 @@
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 </head>
 <body>
+
+  <nav>
+    <a href="#/">项目</a>
+    <a href="#/home1">home1</a>
+    <a href="#/bar/a">bar/a</a>
+  </nav>
+  
   <div id="app"></div>
   <script>
     window.$docsify = {
@@ -17,9 +24,12 @@
       repo: '',
       coverpage: true,
       loadSidebar: true,
+      loadNavbar: true,
+      subMaxLevel: 1
     }
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
 </body>
+
 </html>
