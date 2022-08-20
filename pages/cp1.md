@@ -40,15 +40,98 @@
 ### 例题1.3 总和最大区间问题
 
 给定一个实数序列，设计一个最有效的算法，找到一个总和最大的区间
-  
+
+输入格式：
+
+第一行：一个正整数N，表示序列长度
+
+第二行：N个实数，以空格为分隔
+
 #### 1. 三重循环 O(N^3)
 
 * 确定一个子区间需要起点p和终点q，再由p到q遍历求和，共三重循环。
 
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<double> arr;
+int N;
+double tmp;
+int p, q, mp, mq; //记录左右下标
+double maxSum, sum; //记录当前最大子序和与子序和
+
+int main(){
+	cin>>N;
+	for(int i=0; i<N; i++){
+		cin>>tmp;
+		arr.push_back(tmp);
+	}
+	for(p=0; p<N; p++){
+		for(q=p; q<N; q++){
+			sum = 0;
+			for(int i=p; i<=q; i++){
+				sum+=arr[i];
+				if(sum>maxSum){
+					maxSum=sum;
+					mp=p;
+					mq=q;
+				}
+			}
+		}
+	}
+	printf("maxSum:%.2f\nmp:%d\nmq:%d\n", maxSum, mp, mq);
+	for(int i=mp; i<=mq; i++){
+		printf("%.2f ", arr[i]);
+	}
+	
+	return 0;
+}
+```
+
 #### 2. 两重循环 O(N^2)
 
 * 子序列和没必要每次从头开始遍历累加，只需要在前一个子序列和之上加减即可。
+* 在三重循环的代码上稍作修改
 
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<double> arr;
+int N;
+double tmp;
+int p, q, mp, mq;
+double maxSum, sum;
+
+int main(){
+	cin>>N;
+	for(int i=0; i<N; i++){
+		cin>>tmp;
+		arr.push_back(tmp);
+	}
+	maxSum=arr[0];
+	
+	for(p=0; p<N; p++){
+		sum=0;
+		for(q=p; q<N; q++){
+			sum+=arr[q];
+			if(sum>maxSum){
+				maxSum=sum;
+				mp=p;
+				mq=q;
+			}
+		}
+	}
+	
+	printf("maxSum:%.2f\nmp:%d\nmq:%d\n", maxSum, mp, mq);
+	for(int i=mp; i<=mq; i++){
+		printf("%.2f ", arr[i]);
+	}
+	
+	return 0;
+}
+```
 #### 3. 分治法 O(NlogN)
 
 * 序列S的最大和子序列分如下三种情况：
