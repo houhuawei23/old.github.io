@@ -6,9 +6,8 @@
 
 编程的自我要求：
 
->力争一次全对，没有错误，算法在设计时就达到最佳。
-
->遇到问题时解决问题的积极态度。
+>力争一次全对，没有错误，算法在设计时就达到最佳。  
+遇到问题时解决问题的积极态度。
 
 ### 思考题1.1：
 *什么产品和计算机类似，是软硬件分离的？*
@@ -23,11 +22,9 @@
 
     要逐步的培养起对运算量、运算速度、运算空间的“感觉”来。这要求对算法做空间和时间的复杂度分析，根据限制条件，计算量进行预估。
 
->高德纳算法分析思想：
-
->1.只考虑数据量大到接近无穷的情况。
-
->2.将决定算法快慢的因素划分为 不随数据量变化的因素 与 随数据量变化的因素。
+>高德纳算法分析思想：  
+1.只考虑数据量大到接近无穷的情况。  
+2.将决定算法快慢的因素划分为 不随数据量变化的因素 与 随数据量变化的因素。
 
 ### 思考题1.2：
 
@@ -43,8 +40,7 @@
 
 输入格式：
 
-第一行：一个正整数N，表示序列长度
-
+第一行：一个正整数N，表示序列长度  
 第二行：N个实数，以空格为分隔
 
 #### 1. 三重循环 O(N^3)
@@ -142,9 +138,279 @@ int main(){
 1和2可递归调用，3经简单分析可知，其区间为 [p1, q2]
 
 
+<font color="#dd0000">第三种情况有问题，书上称：</font><br /> 
+
+>2．前后两个子序列的总和最大区间中间有间隔，我们假定这两个子序列的总和最大区间分别是[p1,q1]和[p2,q2]。这时，整个序列的总和最大区间是下面三者中最大的那一个：  
+（1）[p1,q1]  
+（2）[p2,q2]；  
+（3）[p1,q2]。  
+至于为什么，这是本节的思考题。  
+><p align="right">Page: 037</p>
+
+但是，横跨中间的可能的最大子区间，不一定为[p1,q2]。举例来说明：
+序列：
+>[-2, 1, -3, 4, -1, 2, 1, -5, 4]  
+
+mid = (0+8)/2 = 4  
+划分为:
+
+>左半子序列：[-2, 1, -3, 4, -1]  
+其最大和子序列为：[4]，对应下标区间为：[3,3]， 即p1=q1=3，lmsum = 4
+
+>右半子序列：[2, 1, -5, 4]，  
+其最大和子序列为：[4]，其对应下标区间为：[8,8]， 即p2=q2=8， rmsum = 4
+
+>进而，[p1,q2]对应的区间为[3,8]，对应子序列和为5
+
+然而，可知实际最大和子序列为[4, -1, 2, 1]，对应下标区间为[3, 6]，对应子序和为6  
+并不是[p1,q2]
+
+**按书中描述的代码：**
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+void maxSubSum(vector<double> arr, int p, int q, int &mp, int &mq, double &maxSum);
+
+vector<double> arr;
+int N=0;
+int mp=0, mq=0;
+double tmp=0, maxSum=0;
+
+int main(){
+	cin>>N;
+	for(int i=1; i<=N; i++){
+		cin>>tmp;
+		arr.push_back(tmp);
+	}
+
+	maxSubSum(arr, 0, N-1, mp, mq, maxSum);
+	
+	printf("maxSum:%.2f\nmp:%d\nmq:%d\n",maxSum, mp, mq);
+	for(int i=mp; i<= mq; i++){
+		printf("%.2f ", arr[i]);
+	}
+	return 0;
+}
+
+void maxSubSum(vector<double> arr, int p, int q, int &mp, int &mq, double &maxSum){
+	//边界情况
+	if(p>=q){
+		mp=mq=p;
+		maxSum=arr[p];
+		return ;
+	}
+	
+	int mid = p+(q-p)/2;
+	//mid = (p+q)/2;
+	int lmp, lmq, rmp, rmq;
+	double lmsum, rmsum, midsum=0;
+	double tmpsum=0;
+	//递归情况
+	maxSubSum(arr, p, mid, lmp, lmq, lmsum);
+	maxSubSum(arr, mid+1, q, rmp, rmq, rmsum);
+	
+	/*
+	midsum错误，原本想midsum应该起止于mp， mq，想当然以为要包含lmsum，rmsum了；
+	应该按照从中间向两边扩展
+	
+	*/
+	for(int i=lmp; i<= rmq; i++){
+		midsum+=arr[i];
+	}
+	
+	if(lmsum>rmsum && lmsum>midsum){
+		mp=lmp;
+		mq=lmq;
+		maxSum=lmsum;
+	}
+	else if(rmsum >lmsum && rmsum>midsum){
+		mp=rmp;
+		mq=rmq;
+		maxSum=rmsum;
+	}	
+	else{
+		mp=lmp;
+		mq=rmq;
+		maxSum=midsum;
+	}
+	return ;
+	
+}
+```
+>输入：  
+9  
+-2 1 -3 4 -1 2 1 -5 4
+
+>输出：  
+maxSum:5.00  
+mp:3  
+mq:8  
+4.00 -1.00 2.00 1.00 -5.00 4.00
+
+>期望输出：  
+maxSum:6.00  
+mp:3  
+mq:6  
+4.00 -1.00 2.00 1.00 
+
+<font color="#dd0000">修正：</font><br /> 
+重新考虑跨越中间(mid)的的情况：从mid开始，向序列左右扩展，保留最大值及对应下标  
+**对应代码为：**
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+void maxSubSum(vector<double> arr, int p, int q, int &mp, int &mq, double &maxSum);
+
+vector<double> arr;
+int N=0;
+int mp=0, mq=0;
+double tmp=0, maxSum=0;
+
+int main(){
+	cin>>N;
+	for(int i=1; i<=N; i++){
+		cin>>tmp;
+		arr.push_back(tmp);
+	}
+	
+	maxSubSum(arr, 0, N-1, mp, mq, maxSum);
+	
+	printf("maxSum:%.2f\nmp:%d\nmq:%d\n",maxSum, mp, mq);
+	for(int i=mp; i<= mq; i++){
+		printf("%.2f ", arr[i]);
+	}
+	return 0;
+}
+
+void maxSubSum(vector<double> arr, int p, int q, int &mp, int &mq, double &maxSum){
+	//边界情况
+	if(p>=q){
+		mp=mq=p;
+		maxSum=arr[p];
+		return ;
+	}
+	
+	int mid = p+(q-p)/2;
+	//mid = (p+q)/2;
+	int lmp, lmq, rmp, rmq;
+	double lmsum, rmsum, midrsum=0, midlsum=0;
+	double tmprsum=0, tmplsum=0;
+	//递归情况
+	maxSubSum(arr, p, mid, lmp, lmq, lmsum);
+	maxSubSum(arr, mid+1, q, rmp, rmq, rmsum);
+	
+	/*
+	midsum错误，原本想midsum应该起止于mp， mq，想当然以为要包含lmsum，rmsum了；
+	应该按照从中间向两边扩展
+	
+	*/
+	int midp=mid, midq=mid+1;
+	
+	for(int j=mid; j>=p; j--){
+		tmplsum+=arr[j];
+		if(tmplsum>midlsum){
+			midlsum=tmplsum;
+			midp=j;
+		}
+		
+	}
+	for(int i=mid+1; i<=q; i++){
+		tmprsum+=arr[i];
+		if(tmprsum>midrsum){
+			midrsum=tmprsum;
+			midq=i;
+		}
+	}
+	double midsum=midlsum+midrsum;
+	if(lmsum>rmsum && lmsum>midsum){
+		mp=lmp;
+		mq=lmq;
+		maxSum=lmsum;
+	}
+	else if(rmsum >lmsum && rmsum>midsum){
+		mp=rmp;
+		mq=rmq;
+		maxSum=rmsum;
+	}	
+	else{
+		mp=midp;
+		mq=midq;
+		maxSum=midsum;
+	}
+	return ;
+	
+}
+```
 #### 4. 正反两遍扫描法 O(N)
 
 类似于前缀和？
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+double maxSubSum(vector<double> arr, int l, int r);
+
+vector<double> arr;
+int N;
+double tmp;
+int main(){
+	cin>>N;
+	for(int i=1; i<=N; i++){
+		cin>>tmp;
+		arr.push_back(tmp);
+	}
+	maxSubSum(arr, 0, N-1);
+	return 0;
+}
+
+double maxSubSum(vector<double> arr, int l, int r){
+	int mp,mq, p, q;
+	mp=mq=p=q=l;
+	int i;
+	
+	double maxsum=0, foresum=0, maxforesum=0;
+	for(p=l; p<=r; p++){
+		if(arr[p]>0){//找到大于0的项
+			//printf("p: %.2f\n",arr[p]);
+			//sum=arr[p];
+			foresum=0;
+			maxforesum=0;
+			for(i=p; i<=r; i++){
+				foresum+=arr[i];
+				
+				if(foresum>maxforesum){
+					maxforesum=foresum;
+					q=i;
+					//printf("maxforesum: %.2f\n",maxforesum);
+				}
+				
+				if(foresum<0 || i==r){//foresum<0或着已经到序列尾部了
+					
+					if(maxforesum>maxsum){
+						maxsum=maxforesum;
+						mp=p;
+						mq=q;
+					}
+					
+
+					break;
+				}
+			}
+
+			p=i;
+		}
+		
+	}
+	printf("maxSum:%.2f\nmp:%d\nmq:%d\n",maxsum, mp, mq);
+	for(int i=mp; i<= mq; i++){
+		printf("%.2f ", arr[i]);
+	}
+	return maxsum;
+}
+```
 
 
 #### 5. 动态规划dp O(N)
