@@ -256,7 +256,9 @@ mq:6
 
 <font color="#dd0000">修正：</font><br /> 
 重新考虑跨越中间(mid)的的情况：从mid开始，向序列左右扩展，保留最大值及对应下标  
+
 **对应代码为：**
+
 ```cpp
 #include <bits/stdc++.h>
 using namespace std;
@@ -415,7 +417,128 @@ double maxSubSum(vector<double> arr, int l, int r){
 
 #### 5. 动态规划dp O(N)
 
-#### 6.  简单扫描 O(N)
+将问题分解考察，首先，最大子序和对应的区间为[p, q]，直观上感觉到，下标可以作为某种“状态”的标识。  
+状态定义：dp[i]时以下标i为结尾的最大子序列  
+状态转移关系/方程：  
+
+>当dp[i-1] > 0时，dp[i] = dp[i-1]+arr[i]  
+当dp[i-1]<=0时，dp[i]= arr[i]
+
+初始化：dp[0]=arr[0];
+
+代码实现如下：  
+
+```cpp
+
+#include <bits/stdc++.h>
+using namespace std;
+
+template<class elemType>
+elemType maxSubSum(vector<elemType> arr, int r, int l);
+
+int N;
+
+int main(){
+	cin>>N;
+	vector<double> arr;
+	double tmp;
+	for(int i=0; i<N; i++){
+		cin>>tmp;
+		arr.push_back(tmp);
+	}
+	double maxsum=maxSubSum(arr, 0, N-1);
+	return 0;
+}
+
+template<class elemType>//使用模板来提供更好的可移植性
+elemType maxSubSum(vector<elemType> arr, int r, int l){
+	int size = arr.size();
+	//下标为i处的dp，代表：以i为最后一个元素的最大子序列和
+	//当dp[i-1] > 0时，dp[i] = dp[i-1]+arr[i]
+	//当dp[i-1]<=0时，dp[i]= arr[i]
+	//用maxdp维护所有“以i结尾的最大子序列和”中最大的那个，即整个序列的最大子序列和
+	elemType maxdp=0, dp=0;
+	
+	for(int i=0; i<size; i++){
+		if(dp>0){
+			dp+=arr[i];
+		}
+		else{
+			dp=arr[i];
+		}
+		if(dp>maxdp){
+			maxdp=dp;
+		}
+	}
+	
+	//printf("maxdp: %.")
+	cout<<"maxdp: "<<maxdp;
+	return maxdp;
+}
+
+```
+
+#### 6.  简单扫描 O(N)  
+
+首先扫描到一个大于零的数，以它为起点，向后累加得到thisSum，  
+每次累加得到的hisSum与maxSum比较并去留，  
+因为maxSum对应的子序列不能以负数开头，所以，当thisSum<0时，  
+重置累加起点和thisSum，重复上面的流程。
+
+```cpp
+
+#include <bits/stdc++.h>
+using namespace std;
+
+double maxSubsequenceSum(vector<double> a, int &start, int &end);
+
+int N;
+double maxsum;
+int p, q;
+
+int main(){
+	cin>>N;
+	vector<double> arr;
+	double tmp;
+	for(int i=0; i<N; i++){
+		cin>>tmp;
+		arr.push_back(tmp);
+	}
+	double maxsum=maxSubsequenceSum(arr, p, q);
+	printf("maxSum:%.2f\nmp:%d\nmq:%d\n",maxsum, p, q);
+	
+	return 0;
+}
+
+//枚举分析改进
+/*
+首先扫描到一个大于零的数，以它为起点，向后累加得到thisSum，
+每次累加得到的hisSum与maxSum比较并去留，
+因为maxSum对应的子序列不能以负数开头，所以，当thisSum<0时，
+重置累加起点和thisSum，重复上面的流程
+*/
+//有特殊情况，需要改进，遇到<0的序列不能全盘否定，要保留最优
+double maxSubsequenceSum(vector<double> a, int &start, int &end){
+	int maxSum=0, thisSum=0, starttmp=0;
+	start=end=0;
+	int size= a.size();
+	for(int i=0; i<size; i++){
+		thisSum+=a[i];
+		if(thisSum<0){
+			thisSum=maxSum=0;
+			starttmp=i+1;//遇到thisSum<0时，只修改starttmp
+		}
+		else if(thisSum>maxSum){
+			maxSum=thisSum;
+			start=starttmp;//只有thisSum>maxSum时才更新start
+			end=i;
+		}
+	}
+	if(start==size){start=end=0;}
+	return maxSum;
+}
+
+```
 
 #### 思考题1.3
 
@@ -423,15 +546,41 @@ double maxSubSum(vector<double> arr, int l, int r){
 
 * Q2．在一个数组中寻找一个区间，使得区间内的数字之和等于某个事先给定的数字。
 
-
 * Q3．在一个二维矩阵中，寻找一个矩形的区域，使其中的数字之和达到最大值。
+
+**解答：**
+
+Q2：  
+参考“两数之和”问题求解的思路：  
+```伪代码
+procedure twoSum(list, target)
+	map: list[i]->i  
+	
+	for e, i in list, listindex:
+		if target - e not in map :
+			map[e] = i;
+		
+		else if target - e in map :
+			print(map[e], map[target-e])
+			//找到了
+```
+解答：
+step1: 建立字典/哈希表map：数组list的前缀和 -> 前缀和对应的下标q  
+因为，若S(p,q)==target， 就有S(1, p-1) = S(1, q) - S(p,q) = S(1, q) - target  
+
+
+step2: 遍历到q，得到S(1,q)，查询map中有无key=S(1, q) - target
+		如果有，则返回p=map[key]+1  
+
+其中，map的建立可与遍历同时进行
+
 
 # 1.4 关于排序的讨论
 
 #### 思考题1.4
-* Q1．赛跑问题（GS）。
+* Q1．赛跑问题（GS）。  
 
-* 假定有25名短跑选手比赛争夺前三名，赛场上有五条赛道，一次可以有五名选手同时比赛。比赛并不计时，只看相应的名次。假设选手的发挥是稳定的，也就是说如果约翰比张三跑得快，张三比凯利跑得快，约翰一定比凯利跑得快。最少需要几次比赛才能决出前三名？
+* 假定有25名短跑选手比赛争夺前三名，赛场上有五条赛道，一次可以有五名选手同时比赛。比赛并不计时，只看相应的名次。假设选手的发挥是稳定的，也就是说如果约翰比张三跑得快，张三比凯利跑得快，约翰一定比凯利跑得快。最少需要几次比赛才能决出前三名？  
 
 * Q2．区间排序。
 
